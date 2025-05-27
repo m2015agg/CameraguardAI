@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./events.db:/app/events.db
+    environment:
+      - MQTT_CONFIG=/app/config/mqtt_config.json
+    depends_on:
+      - mqtt
+
+  mqtt:
+    image: eclipse-mosquitto:latest
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./config/mqtt_config.json:/mosquitto/config/mqtt_config.json 

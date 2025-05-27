@@ -1,0 +1,7 @@
+{
+  "host": "mqtt",
+  "port": 1883,
+  "username": "user",
+  "password": "password",
+  "topic": "frigate/events"
+} 
