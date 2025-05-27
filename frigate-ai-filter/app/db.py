@@ -19,7 +19,7 @@ def init_db():
         )
     ''')
     conn.commit()
-    return conn, c
+    return conn
 
 def insert_event(event_data):
     conn = sqlite3.connect('events.db')
