@@ -1,7 +1,0 @@
-{
-    "host": "10.0.1.50",
-    "port": 1883,
-    "username": "frigate",
-    "password": "frigate_2024",
-    "topic": "frigate/events"
-}
