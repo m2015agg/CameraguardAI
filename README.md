@@ -47,6 +47,18 @@ A full-stack Next.js app for real-time camera event monitoring using Supabase an
 - `MQTT_WS_URL`
 - `MQTT_TOPIC`
 
+### Editing .env Files in Linux Terminal
+To edit your .env file directly in the terminal, you can use:
+```bash
+nano .env
+```
+or
+```bash
+vim .env
+```
+- **nano**: Simple editor, use Ctrl+O to save, Ctrl+X to exit.
+- **vim**: Press `i` to enter insert mode, edit, then press `Esc`, type `:wq` to save and exit.
+
 ## Pages
 - `/` — Home, real-time MQTT events
 - `/settings` — Edit MQTT config
