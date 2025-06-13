@@ -1,2 +1,50 @@
 # .gitignore
-.env
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Next.js
+.next/
+out/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+ENV/
+.venv/
+.Python
+
+# macOS
+.DS_Store
+
+# Docker
+*.pid
+*.sock
+
+# VSCode
+.vscode/
+
+# Logs
+*.log
+
+# Misc
+*.swp
+*.swo
+.idea/
+*.bak
+
+# Build artifacts
+dist/
+build/
+coverage/
+
+# Cursor/AI tools
+.cursor/
