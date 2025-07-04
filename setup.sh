@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────────────────────
-# setup.sh — 1-time “git clone” bootstrap for CameraGuardAI
+# setup.sh — 1-time "git clone" bootstrap for CameraGuardAI
 # Usage: bash setup.sh
 # Prereqs: supabase CLI, docker & docker-compose, yq, openssl
 # ──────────────────────────────────────────────────────────────
@@ -14,7 +14,7 @@ else
   echo "✓  .env created from .env.template"
 fi
 
-# 2) start Supabase’s local stack (will generate supabase/kong/kong.yml)
+# 2) start Supabase's local stack (will generate supabase/kong/kong.yml)
 echo "⏳  Starting Supabase local stack…"
 supabase init 2>/dev/null || true
 supabase start --no-telemetry &
@@ -43,3 +43,6 @@ echo "🎉  Setup complete!"
 echo "  • Supabase Studio → http://localhost:3000"
 echo "  • Mosquitto MQTT → 1883 (TCP) & 8080 (WebSocket)"
 echo "  • CameraGuardAI app → whatever port you exposed"
+
+export DOCKER_BUILDKIT=1
+docker build .

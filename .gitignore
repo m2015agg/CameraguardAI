@@ -48,3 +48,4 @@ coverage/
 
 # Cursor/AI tools
 .cursor/
+.env

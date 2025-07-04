@@ -1,34 +1,23 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { Settings, loadSettings, saveSettings } from '@/lib/settings';
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('*')
-      .single();
-
-    if (error) throw error;
-    return NextResponse.json(data);
+    const settings = loadSettings();
+    return NextResponse.json(settings);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
+    console.error('Error in GET /api/settings:', error);
+    return NextResponse.json({ error: 'Failed to load settings' }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { mqtt_ws_url, mqtt_topic } = body;
-
-    const { data, error } = await supabase
-      .from('settings')
-      .upsert({ mqtt_ws_url, mqtt_topic })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return NextResponse.json(data);
+    const settings: Settings = await request.json();
+    saveSettings(settings);
+    return NextResponse.json({ message: 'Settings saved successfully' });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
+    console.error('Error in POST /api/settings:', error);
+    return NextResponse.json({ error: 'Failed to save settings' }, { status: 500 });
   }
 } 

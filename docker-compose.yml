@@ -1,67 +1,6 @@
-# docker-compose.yml
 version: '3.8'
 
 services:
-  # -------------------------------
-  # Supabase core services
-  # -------------------------------
-  db:
-    image: supabase/postgres:15.2.0
-    env_file:
-      - .env
-    volumes:
-      - supabase_data:/var/lib/postgresql/data
-
-  auth:
-    image: supabase/gotrue:latest
-    env_file:
-      - .env
-    depends_on:
-      - db
-
-  postgrest:
-    image: supabase/postgrest:latest
-    env_file:
-      - .env
-    depends_on:
-      - db
-
-  realtime:
-    image: supabase/realtime:latest
-    env_file:
-      - .env
-    depends_on:
-      - db
-
-  storage:
-    image: supabase/storage:latest
-    env_file:
-      - .env
-    depends_on:
-      - db
-
-  studio:
-    image: supabase/studio:latest
-    env_file:
-      - .env
-    ports:
-      - '3000:3000'
-    depends_on:
-      - auth
-
-  # -------------------------------
-  # MQTT broker
-  # -------------------------------
-  mosquitto:
-    image: eclipse-mosquitto:2.0
-    env_file:
-      - .env
-    ports:
-      - '${MQTT_PORT}:1883'
-      - '${MQTT_WS_PORT}:8080'
-    volumes:
-      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
-
   # -------------------------------
   # Your CameraGuardAI service
   # -------------------------------
@@ -69,25 +8,113 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    env_file:
-      - .env
-    depends_on:
-      - db
-      - mosquitto
+    environment:
+      - MQTT_HOST=${MQTT_HOST}
+      - MQTT_PORT=${MQTT_PORT}
+      - MQTT_TOPIC_PREFIX=${CAMERAGUARD_MQTT_TOPIC}
+      - MQTT_CLIENT_ID=camera-guard
+      - MQTT_USER=${MQTT_USER}
+      - MQTT_PASS=${MQTT_PASS}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${DB_HOST}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_PORT=${DB_PORT}
+      - JWT_SECRET=${JWT_SECRET}
+      - SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - FRIGATE_API_URL=http://10.0.1.50:5000
+    volumes:
+      - ./src:/app/src
     ports:
-      - '5000:5000'
+      - "3000:3000"
+    networks:
+      - cameraguard-network
+    restart: unless-stopped
 
   # -------------------------------
   # Next.js application
   # -------------------------------
   camera-guard-app:
-    build: .
-    env_file: .env
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+      args:
+        - SUPABASE_URL=${SUPABASE_URL}
+        - SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}
+        - ANON_KEY=${ANON_KEY}
+    environment:
+      - MQTT_HOST=${MQTT_HOST}
+      - MQTT_PORT=${MQTT_PORT}
+      - MQTT_TOPIC_PREFIX=${CAMERAGUARD_MQTT_TOPIC}
+      - MQTT_CLIENT_ID=camera-guard-app
+      - MQTT_USER=${MQTT_USER}
+      - MQTT_PASS=${MQTT_PASS}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${DB_HOST}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_PORT=${DB_PORT}
+      - JWT_SECRET=${JWT_SECRET}
+      - SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}
+      - ANON_KEY=${ANON_KEY}
+      - SUPABASE_URL=${SUPABASE_URL}
+    volumes:
+      - ./src:/app/src
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
     ports:
-      - "3000:3000"
-    depends_on:
-      - db
-      - mosquitto
+      - "3001:3000"
+    networks:
+      - cameraguard-network
+    restart: unless-stopped
+
+  # -------------------------------
+  # Lizi AI Alert Agent
+  # -------------------------------
+  lizi:
+    build:
+      context: .
+      dockerfile: Dockerfile.lizi
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}
+      - MQTT_HOST=${MQTT_HOST}
+      - MQTT_PORT=${MQTT_PORT}
+      - MQTT_USER=${MQTT_USER}
+      - MQTT_PASS=${MQTT_PASS}
+    volumes:
+      - ./src:/app/src
+      - /var/run/docker.sock:/var/run/docker.sock
+      - lizi-logs:/app/logs
+    command: python3 /app/src/lizi.py
+    networks:
+      - cameraguard-network
+    restart: unless-stopped
+
+  # -------------------------------
+  # Lizi API Service
+  # -------------------------------
+  lizi-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.lizi
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}
+    volumes:
+      - ./src:/app/src
+      - /var/run/docker.sock:/var/run/docker.sock
+      - lizi-logs:/app/logs
+    command: python3 /app/src/lizi_api.py
+    ports:
+      - "5001:5000"
+    networks:
+      - cameraguard-network
+    restart: unless-stopped
+    user: root
+
+networks:
+  cameraguard-network:
+    driver: bridge
 
 volumes:
-  supabase_data:
+  lizi-logs:

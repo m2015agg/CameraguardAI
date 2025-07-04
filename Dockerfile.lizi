@@ -1,0 +1,25 @@
+# Dockerfile.lizi
+FROM python:3.11-slim
+
+# Set environment variables for Python
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install system dependencies only if needed (uncomment if required by your requirements.txt)
+# RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better cache usage
+COPY src/lib/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy only the necessary source files
+COPY src/lizi.py ./
+# (Add more COPY lines if you need other files, or use COPY src/. . for all)
+
+# Use a non-root user for security
+RUN mkdir -p /app/logs && chmod 777 /app/logs && useradd -m appuser && chown -R appuser /app
+USER appuser
+
+CMD ["python", "lizi.py"] 
